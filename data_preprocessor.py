@@ -65,7 +65,7 @@ def eventAttendees(training_data):
 
 def addAttendeesInfo(training_data):
     unique_events = set(training_data['event'])
-    attendance_headers=['event','event_interested','event_maybe','event_invited','event_no']
+    attendance_headers=['event','event_interested_ratio','event_maybe_ratio','event_invited_ratio','event_no_ratio']
     with open('data/event_attendees.csv','r') as attendees:
         reader=csv.reader(attendees)
         reader.next()
@@ -74,32 +74,34 @@ def addAttendeesInfo(training_data):
             if int(event_id) in unique_events:
                 (interested_users, maybe_users, invited_users, notinterested_users) = \
                     [interested_users.split(' '), maybe_users.split(' '), invited_users.split(' '), notinterested_users.split(' ')]
+                total = len(interested_users) + len(maybe_users) + len(invited_users) + len(notinterested_users)
                 (total_interested, total_maybe, total_invited, total_no) = \
-                    [len(interested_users),len(maybe_users),len(invited_users),len(notinterested_users)]
+                    [float(len(interested_users))/total,float(len(maybe_users))/total,
+                     float(len(invited_users))/total,float(len(notinterested_users))/total]
                 attendees_data.append([int(event_id), total_interested, total_maybe, total_invited, total_no])
     final_data=DataFrame(attendees_data, columns=attendance_headers)
     return pd.merge(training_data,final_data)
 
 
-def getNumberOfInterestedAttendees(k, event_attendees, user_friends):
+def getRatioOfInterestedAttendees(k, event_attendees, user_friends):
    e = k[1]['event']
    u = k[1]['user']
-   return len(set(event_attendees[e]['interested_users']).intersection(set(user_friends[u])))
+   return float(len(set(event_attendees[e]['interested_users']).intersection(set(user_friends[u]))))/len(set(user_friends[u]))
 
-def getNumberOfNotInterestedAttendees(k, event_attendees, user_friends):
+def getRatioOfNotInterestedAttendees(k, event_attendees, user_friends):
    e = k[1]['event']
    u = k[1]['user']
-   return len(set(event_attendees[e]['notinterested_users']).intersection(set(user_friends[u])))
+   return float(len(set(event_attendees[e]['notinterested_users']).intersection(set(user_friends[u]))))/len(set(user_friends[u]))
 
-def getNumberOfMaybeAttendees(k, event_attendees, user_friends):
+def getRatioOfMaybeAttendees(k, event_attendees, user_friends):
    e = k[1]['event']
    u = k[1]['user']
-   return len(set(event_attendees[e]['maybe_users']).intersection(set(user_friends[u])))
+   return float(len(set(event_attendees[e]['maybe_users']).intersection(set(user_friends[u]))))/len(set(user_friends[u]))
 
-def getNumberOfInvitedAttendees(k, event_attendees, user_friends):
+def getRatioOfInvitedAttendees(k, event_attendees, user_friends):
    e = k[1]['event']
    u = k[1]['user']
-   return len(set(event_attendees[e]['invited_users']).intersection(set(user_friends[u])))
+   return float(len(set(event_attendees[e]['invited_users']).intersection(set(user_friends[u]))))/len(set(user_friends[u]))
 
 def addFriendAttendees(train, user_friends, event_attendees):
   interested = []
@@ -107,18 +109,18 @@ def addFriendAttendees(train, user_friends, event_attendees):
   maybe = []
   invited = []
   for k in train.iterrows():
-      interestedUsers = getNumberOfInterestedAttendees(k, event_attendees, user_friends)
-      invitedUsers = getNumberOfInvitedAttendees(k, event_attendees, user_friends)
-      maybeUsers = getNumberOfMaybeAttendees(k, event_attendees, user_friends)
-      notInterestedUsers = getNumberOfNotInterestedAttendees(k, event_attendees, user_friends)
+      interestedUsers = getRatioOfInterestedAttendees(k, event_attendees, user_friends)
+      invitedUsers = getRatioOfInvitedAttendees(k, event_attendees, user_friends)
+      maybeUsers = getRatioOfMaybeAttendees(k, event_attendees, user_friends)
+      notInterestedUsers = getRatioOfNotInterestedAttendees(k, event_attendees, user_friends)
       interested.append(interestedUsers)
       notInterested.append(notInterestedUsers)
       maybe.append(maybeUsers)
       invited.append(invitedUsers)
-  train['interested_frnds'] = interested
-  train['notinterested_frnds'] = notInterested
-  train['maybe_frnds'] = maybe
-  train['invited_frnds'] = invited
+  train['interested_frnds_ratio'] = interested
+  train['notinterested_frnds_ratio'] = notInterested
+  train['maybe_frnds_ratio'] = maybe
+  train['invited_frnds_ratio'] = invited
   return train
 
 def sameCity(k):
@@ -175,6 +177,7 @@ def generateModelData(training_data):
     training_data['same_city'] = training_data.apply(sameCity, axis = 1)
     training_data['same_country'] = training_data.apply(sameCountry, axis = 1)
 
+<<<<<<< HEAD
     training_data.to_csv("data/output.csv", na_rep = 'NA', header = True, index = False)
 
     inputs_in_use = ['user',
@@ -212,6 +215,36 @@ def generateModelData(training_data):
                      ]
 
     training_data = training_data[inputs_in_use]
+=======
+    training_data.to_csv("output.csv", na_rep = 'NA', header = True, index = False)
+
+    cols_used = ['user',
+                'event',
+                'invited',
+                'user_locale',
+                'user_joinedAt'
+                'same_city',
+                'same_country',
+                'user_gender',
+                'admin_friend',
+                'event_interested_ratio',
+                'event_no_ratio',
+                'event_maybe_ratio',
+                'event_invited_ratio',
+                'time_left',
+                'user_age',
+                'interested_frnds_ratio',
+                'maybe_frnds_ratio',
+                'invited_frnds_ratio',
+                'notinterested_frnds_ratio',
+
+                # 'topic',
+                # 'user_community',
+
+                ]
+
+    training_data = training_data[cols_used]
+>>>>>>> 63078ea947fd942723d48563c13b4801461d62a4
     return training_data
 
 
@@ -247,7 +280,7 @@ def main():
     training_data = generateModelData(training_data)
     print 'Finished post-processing train data'
 
-    writeToFile(training_data, "data/feature_train.csv")
+    writeToFile(training_data, "feature_train.csv")
     print 'Finished writing data'
 
 if __name__ == '__main__':
