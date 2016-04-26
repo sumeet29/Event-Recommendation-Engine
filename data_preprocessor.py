@@ -124,9 +124,17 @@ def addFriendAttendees(train, user_friends, event_attendees):
 def sameCity(k):
    event_city = k['event_header_city'].lower()
    location = k['user_location'].lower()
+   if location in 'na':
+       return False
    return event_city in location
 
 def sameCountry(k):
+   event_city = k['event_header_city'].lower()
+   location = k['user_location'].lower()
+   if location in 'na':
+       return False
+   if event_city in location:
+       return True
    event_country = k['event_header_country'].lower()
    location = k['user_location'].lower()
    return event_country in location
@@ -167,7 +175,7 @@ def generateModelData(training_data):
     training_data['same_city'] = training_data.apply(sameCity, axis = 1)
     training_data['same_country'] = training_data.apply(sameCountry, axis = 1)
 
-    # training_data.to_csv("output.csv", na_rep = 'NA', header = True, index = False)
+    training_data.to_csv("data/output.csv", na_rep = 'NA', header = True, index = False)
 
     inputs_in_use = ['user',
                      'event',
