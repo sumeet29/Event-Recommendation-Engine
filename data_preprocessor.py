@@ -163,6 +163,48 @@ def calcTime(k):
    timeLeft = (start - end).total_seconds() / 3600.0
    return timeLeft
 
+def changeLocales(train):
+    locales = {'es_NI': 'Nicaragua', 'tr_TR': 'Turkey', 'en_SG': 'Singapore', 'th_TH': 'Thailand', 'es_VE': 'Venezuela', 'hu_HU': 'Hungary', 'es_AR': 'Argentina', 'ar_EG': 'Egypt', 'is_IS': 'Iceland', 'zh_HK': 'Hong Kong', 'de_AT': 'Austria', 'pt_BR': 'Brazil', 'cs_CZ': 'Czech Republic', 'sk_SK': 'Slovakia', 'mk_MK': 'Macedonia', 'ar_MA': 'Morocco', 'en_ZA': 'South Africa', 'sv_SE': 'Sweden', 'in_ID': 'Indonesia', 'es_PR': 'Puerto Rico', 'sr_ME': 'Montenegro', 'fr_FR': 'France', 'fi_FI': 'Finland', 'et_EE': 'Estonia', 'sr_RS': 'Serbia', 'es_PY': 'Paraguay', 'no_NO': 'Norway', 'nl_NL': 'Netherlands', 'es_PE': 'Peru', 'lv_LV': 'Latvia', 'es_PA': 'Panama', 'el_CY': 'Cyprus', 'ro_RO': 'Romania', 'iw_IL': 'Israel', 'es_CO': 'Colombia', 'es_CL': 'Chile', 'es_CR': 'Costa Rica', 'hr_HR': 'Croatia', 'ru_RU': 'Russia', 'da_DK': 'Denmark', 'ar_LB': 'Lebanon', 'sq_AL': 'Albania', 'ms_MY': 'Malaysia', 'ar_OM': 'Oman', 'es_HN': 'Honduras', 'pt_PT': 'Portugal', 'vi_VN': 'Vietnam', 'en_NZ': 'New Zealand', 'ar_YE': 'Yemen', 'ar_SD': 'Sudan', 'be_BY': 'Belarus', 'sr_CS': 'Serbia and Montenegro', 'ar_BH': 'Bahrain', 'ar_JO': 'Jordan', 'es_EC': 'Ecuador', 'hi_IN': 'India', 'ja_JP': 'Japan', 'lt_LT': 'Lithuania', 'sl_SI': 'Slovenia', 'es_ES': 'Spain', 'en_GB': 'United Kingdom', 'bg_BG': 'Bulgaria', 'es_SV': 'El Salvador', 'zh_TW': 'Taiwan', 'sr_BA': 'Bosnia and Herzegovina', 'ar_AE': 'United Arab Emirates', 'es_BO': 'Bolivia', 'zh_CN': 'China', 'it_CH': 'Switzerland', 'ar_IQ': 'Iraq', 'ar_QA': 'Qatar', 'ar_SA': 'Saudi Arabia', 'ar_LY': 'Libya', 'it_IT': 'Italy', 'uk_UA': 'Ukraine', 'el_GR': 'Greece', 'ar_SY': 'Syria', 'fr_BE': 'Belgium', 'ar_DZ': 'Algeria', 'ga_IE': 'Ireland', 'es_GT': 'Guatemala', 'en_AU': 'Australia', 'ar_TN': 'Tunisia', 'es_UY': 'Uruguay', 'en_PH': 'Philippines', 'mt_MT': 'Malta', 'es_US': 'United States', 'ko_KR': 'South Korea', 'de_LU': 'Luxembourg', 'de_DE': 'Germany', 'es_MX': 'Mexico', 'fr_CA': 'Canada', 'es_DO': 'Dominican Republic', 'pl_PL': 'Poland', 'ar_KW': 'Kuwait'}
+    locales.update({
+        'af_ZA': 'South Africa',
+        'cy_GB': 'United Kingdom',
+        'bn_IN': 'India',
+        'ca_ES': 'Spain',
+        'az_AZ': 'Azerbaijan',
+        'id_ID': 'Indonesia',
+        'ka_GE': 'Georgia',
+        'km_KH': 'Cambodia',
+        'pa_IN': 'India',
+        'ku_TR': 'Turkey',
+        'en_IN': 'India',
+        'he_IL': 'Israel',
+        'bs_BA': 'Bosnia and Herzegovina',
+        'fa_IR': 'Iran',
+        'mn_MN': 'Mongolia',
+        'tl_PH': 'Philippines',
+        'nb_NO': 'Norway',
+        'jv_ID': 'Indonesia',
+    })
+    train['user_locale'] = train['user_locale'].replace(locales)
+    return train
+
+def getClusters(training_data):
+    events = set(training_data['event'])
+    with open('data/cluster_events.csv', 'r') as f:
+        reader = csv.reader(f)
+        reader.next()
+        clusters_data = [
+            [int(float(event_id)), "cluster"+cluster]
+            for (event_id, cluster) in reader
+            if int(float(event_id)) in events
+        ]
+    clusters = DataFrame(clusters_data, columns=['event', 'cluster'])
+    return pd.merge(training_data, clusters)
+
+def getCommunities(training_data):
+    communities = pd.read_csv('data/communities.csv', header = 0)
+    return pd.merge(training_data, communities, how='left')
+
 def generateModelData(training_data):
     training_data = training_data.apply(fixNA, axis = 1)
     training_data['time_left'] = training_data.apply(calcTime, axis = 1)
@@ -177,52 +219,15 @@ def generateModelData(training_data):
     training_data['same_city'] = training_data.apply(sameCity, axis = 1)
     training_data['same_country'] = training_data.apply(sameCountry, axis = 1)
 
-<<<<<<< HEAD
-    training_data.to_csv("data/output.csv", na_rep = 'NA', header = True, index = False)
+    # training_data.to_csv("output.csv", na_rep = 'NA', header = True, index = False)
 
-    inputs_in_use = ['user',
-                     'event',
-                     'invited',
-                     'user_locale',
-                     'same_city',
-                     'same_country',
-                     'user_gender',
-                     'admin_friend',
-                     # 'event_interests',
-                     # 'event_potential_interests',
-                     # 'event_invites',
-                     # 'event_nointerests',
-                     'event_interested',
-                     'event_no',
-                     'event_maybe',
-                     'event_invited',
-                     # 'event_interests_ratio',
-                     # 'event_potential_interests_ratio',
-                     # 'event_invites_ratio',
-                     # 'event_nointerests_ratio',
-                     'time_left',
-                     'user_age',
-                     'interested_frnds',
-                     'maybe_frnds',
-                     'invited_frnds',
-                     'notinterested_frnds',
-                     # 'topic',
-                     # 'user_community',
-                     # 'interested_frnds_ratio',
-                     # 'maybe_frnds_ratio',
-                     # 'invited_frnds_ratio',
-                     # 'notinterested_frnds_ratio',
-                     ]
-
-    training_data = training_data[inputs_in_use]
-=======
-    training_data.to_csv("output.csv", na_rep = 'NA', header = True, index = False)
+    training_data = changeLocales(training_data)
 
     cols_used = ['user',
                 'event',
                 'invited',
                 'user_locale',
-                'user_joinedAt'
+                'user_joinedAt',
                 'same_city',
                 'same_country',
                 'user_gender',
@@ -237,14 +242,15 @@ def generateModelData(training_data):
                 'maybe_frnds_ratio',
                 'invited_frnds_ratio',
                 'notinterested_frnds_ratio',
+                'cluster',
+                'user_community',
 
-                # 'topic',
-                # 'user_community',
+                'interested',
+                'not_interested'
 
                 ]
 
     training_data = training_data[cols_used]
->>>>>>> 63078ea947fd942723d48563c13b4801461d62a4
     return training_data
 
 
@@ -260,7 +266,7 @@ def main():
         print 'Usage: data_preprocessor.py'
         sys.exit(-1)
 
-    training_data = loadTrainingData('data/train_small.csv')
+    training_data = loadTrainingData('data/train.csv')
 
     print 'Finished reading original data', len(training_data)
     training_data = expandUsers(training_data)
@@ -268,19 +274,21 @@ def main():
     training_data = expandEvents(training_data)
     print 'Finished filling events information', len(training_data)
 
-    # training_data = findUserCommunities(training_data)
-    # print 'Finished filling user communities', len(training_data)
-
     training_data = addAttendeesInfo(training_data)
     print 'Finished filling attendence information', len(training_data)
 
-    # training_data = findEvenClusters(training_data)
-    # print 'finished filling event clustering information', len(training_data)
+    # Cluster csv is pre generated using events_cluster.py script reading clusters from csv file
+    training_data = getClusters(training_data)
+    print 'Finished filling event cluster information', len(training_data)
+
+    # Communities csv is pre generated using user_communities.py script reading communities from csv file
+    training_data = getCommunities(training_data)
+    print 'Finished filling user community information', len(training_data)
 
     training_data = generateModelData(training_data)
     print 'Finished post-processing train data'
 
-    writeToFile(training_data, "feature_train.csv")
+    writeToFile(training_data, "data/feature_train.csv")
     print 'Finished writing data'
 
 if __name__ == '__main__':
